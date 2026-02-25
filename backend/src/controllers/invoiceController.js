@@ -38,6 +38,9 @@ export const addInvoiceLine = async (req, res) => {
   const { id } = req.params;
   const { description, quantity, unitPrice } = req.body;
 
+  const invoice = await Invoice.findById(id);
+  if (!invoice) return res.status(404).json({ message: "Invoice not found" });
+
   const lineTotal = quantity * unitPrice;
 
   const line = await InvoiceLine.create({
@@ -51,10 +54,10 @@ export const addInvoiceLine = async (req, res) => {
   const lines = await InvoiceLine.find({ invoiceId: id });
   const total = lines.reduce((sum, l) => sum + l.lineTotal, 0);
 
-  await Invoice.findByIdAndUpdate(id, {
-    total,
-    balanceDue: total,
-  });
+  invoice.total = total;
+  invoice.balanceDue = total - invoice.amountPaid; // ✅ FIXED
+
+  await invoice.save();
 
   res.status(201).json(line);
 };
