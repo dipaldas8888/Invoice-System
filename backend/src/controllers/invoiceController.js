@@ -1,6 +1,22 @@
-import Invoice from "../models/Invoice.js";
+import Invoice from "../models/invoice.js";
 import InvoiceLine from "../models/InvoiceLine.js";
 import Payment from "../models/Payment.js";
+
+export const createInvoice = async (req, res) => {
+  const { invoiceNumber, customerName, issueDate, dueDate } = req.body;
+
+  const invoice = await Invoice.create({
+    invoiceNumber,
+    customerName,
+    issueDate,
+    dueDate,
+    total: 0,
+    amountPaid: 0,
+    balanceDue: 0,
+  });
+
+  res.status(201).json(invoice);
+};
 
 export const getInvoiceDetails = async (req, res) => {
   const { id } = req.params;
@@ -16,6 +32,31 @@ export const getInvoiceDetails = async (req, res) => {
     lines,
     payments,
   });
+};
+
+export const addInvoiceLine = async (req, res) => {
+  const { id } = req.params;
+  const { description, quantity, unitPrice } = req.body;
+
+  const lineTotal = quantity * unitPrice;
+
+  const line = await InvoiceLine.create({
+    invoiceId: id,
+    description,
+    quantity,
+    unitPrice,
+    lineTotal,
+  });
+
+  const lines = await InvoiceLine.find({ invoiceId: id });
+  const total = lines.reduce((sum, l) => sum + l.lineTotal, 0);
+
+  await Invoice.findByIdAndUpdate(id, {
+    total,
+    balanceDue: total,
+  });
+
+  res.status(201).json(line);
 };
 
 export const addPayment = async (req, res) => {

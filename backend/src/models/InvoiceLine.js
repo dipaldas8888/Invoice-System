@@ -1,22 +1,34 @@
 import mongoose from "mongoose";
 
-const invoiceSchema = new mongoose.Schema(
+const invoiceLineSchema = new mongoose.Schema(
   {
-    invoiceNumber: String,
-    customerName: String,
-    issueDate: Date,
-    dueDate: Date,
-    status: {
-      type: String,
-      enum: ["DRAFT", "PAID"],
-      default: "DRAFT",
+    invoiceId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Invoice",
+      required: true,
     },
-    total: { type: Number, default: 0 },
-    amountPaid: { type: Number, default: 0 },
-    balanceDue: { type: Number, default: 0 },
-    isArchived: { type: Boolean, default: false },
+    description: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    unitPrice: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    lineTotal: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
   },
   { timestamps: true },
 );
 
-export default mongoose.model("Invoice", invoiceSchema);
+export default mongoose.model("InvoiceLine", invoiceLineSchema);
